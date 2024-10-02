@@ -1879,7 +1879,7 @@ del /q "%ProgramData%\Microsoft\Windows\Start Menu\Programs\7-Zip\*Help*.lnk"
 :: rmdir /s /q "%ProgramData%\Microsoft\Windows\Start Menu\Programs\7-Zip"
 
 :: Installs UniGetUI with dependencies
-winget.exe install --accept-source-agreements --accept-package-agreements --silent --exact --id SomePythonThings.WingetUIStore
+winget.exe install --accept-source-agreements --accept-package-agreements --silent --exact --id MartiCliment.UniGetUI
 
 :: Installing Software Examples
 :: winget.exe install --accept-source-agreements --accept-package-agreements --silent --exact --id Brave.Brave
