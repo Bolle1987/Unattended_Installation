@@ -246,9 +246,13 @@
           <Description>Unloads the Default User Registry Hive</Description>
           <Path>reg.exe unload "HKU\DefaultUser"</Path>
         </RunSynchronousCommand>
-		<!--
 		<RunSynchronousCommand wcm:action="add">
           <Order>9</Order>
+          <Path>powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Get-NetAdapter | Disable-NetAdapter -Confirm:$false"</Path>
+        </RunSynchronousCommand>
+		<!--
+		<RunSynchronousCommand wcm:action="add">
+          <Order>10</Order>
           <Description>Adds Items to Right-Click Context Menu</Description>
           <Path>cmd.exe /c "reg.exe import "C:\Windows\Setup\Scripts\alluser.reg" &gt;&gt;"C:\Windows\Setup\Scripts\alluser.log" 2&gt;&amp;1"</Path>
         </RunSynchronousCommand>
@@ -297,9 +301,13 @@
           <Description>Unloads the Default User Registry Hive</Description>
           <Path>reg.exe unload "HKU\DefaultUser"</Path>
         </RunSynchronousCommand>
-		<!--
 		<RunSynchronousCommand wcm:action="add">
           <Order>9</Order>
+          <Path>powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Get-NetAdapter | Disable-NetAdapter -Confirm:$false"</Path>
+        </RunSynchronousCommand>
+		<!--
+		<RunSynchronousCommand wcm:action="add">
+          <Order>10</Order>
           <Description>Adds Items to Right-Click Context Menu</Description>
           <Path>cmd.exe /c "reg.exe import "C:\Windows\Setup\Scripts\alluser.reg" &gt;&gt;"C:\Windows\Setup\Scripts\alluser.log" 2&gt;&amp;1"</Path>
         </RunSynchronousCommand>
@@ -348,9 +356,13 @@
           <Description>Unloads the Default User Registry Hive</Description>
           <Path>reg.exe unload "HKU\DefaultUser"</Path>
         </RunSynchronousCommand>
-		<!--
 		<RunSynchronousCommand wcm:action="add">
           <Order>9</Order>
+          <Path>powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Get-NetAdapter | Disable-NetAdapter -Confirm:$false"</Path>
+        </RunSynchronousCommand>
+		<!--
+		<RunSynchronousCommand wcm:action="add">
+          <Order>10</Order>
           <Description>Adds Items to Right-Click Context Menu</Description>
           <Path>cmd.exe /c "reg.exe import "C:\Windows\Setup\Scripts\alluser.reg" &gt;&gt;"C:\Windows\Setup\Scripts\alluser.log" 2&gt;&amp;1"</Path>
         </RunSynchronousCommand>
@@ -388,8 +400,12 @@
         <NetworkLocation>Work</NetworkLocation>
         <ProtectYourPC>3</ProtectYourPC>
       </OOBE>
-      <FirstLogonCommands>       
-        </FirstLogonCommands>
+      <FirstLogonCommands>  
+        <SynchronousCommand>
+        <Order>1</Order>
+        <CommandLine>powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Get-NetAdapter | Enable-NetAdapter -Confirm:$false"</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
     </component>
     <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
       <OOBE>
@@ -400,8 +416,12 @@
         <NetworkLocation>Work</NetworkLocation>
         <ProtectYourPC>3</ProtectYourPC>
       </OOBE>
-      <FirstLogonCommands>       
-        </FirstLogonCommands>
+      <FirstLogonCommands>  
+        <SynchronousCommand>
+        <Order>1</Order>
+        <CommandLine>powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Get-NetAdapter | Enable-NetAdapter -Confirm:$false"</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
     </component>
     <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="arm64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
       <OOBE>
@@ -412,8 +432,12 @@
         <NetworkLocation>Work</NetworkLocation>
         <ProtectYourPC>3</ProtectYourPC>
       </OOBE>
-      <FirstLogonCommands>       
-        </FirstLogonCommands>
+      <FirstLogonCommands>  
+        <SynchronousCommand>
+        <Order>1</Order>
+        <CommandLine>powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Get-NetAdapter | Enable-NetAdapter -Confirm:$false"</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
     </component>
   </settings>
  <Extensions>
@@ -920,26 +944,26 @@ $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
 $Shortcut.TargetPath = $TargetPath
 $Shortcut.Save()
 
-$ShortcutPath = "C:\Startup.lnk"
-$TargetPath = "%UserProfile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
-$WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = $TargetPath
-$Shortcut.Save()
+# $ShortcutPath = "C:\Startup.lnk"
+# $TargetPath = "%UserProfile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+# $WshShell = New-Object -ComObject WScript.Shell
+# $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+# $Shortcut.TargetPath = $TargetPath
+# $Shortcut.Save()
 
-$ShortcutPath = "C:\Startmenu All.lnk"
-$TargetPath = "%ProgramData%\Microsoft\Windows\Start Menu\Programs"
-$WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = $TargetPath
-$Shortcut.Save()
+# $ShortcutPath = "C:\Startmenu All.lnk"
+# $TargetPath = "%ProgramData%\Microsoft\Windows\Start Menu\Programs"
+# $WshShell = New-Object -ComObject WScript.Shell
+# $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+# $Shortcut.TargetPath = $TargetPath
+# $Shortcut.Save()
 
-$ShortcutPath = "C:\Startmenu User.lnk"
-$TargetPath = "%UserProfile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs"
-$WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = $TargetPath
-$Shortcut.Save()
+# $ShortcutPath = "C:\Startmenu User.lnk"
+# $TargetPath = "%UserProfile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs"
+# $WshShell = New-Object -ComObject WScript.Shell
+# $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+# $Shortcut.TargetPath = $TargetPath
+# $Shortcut.Save()
 
 Stop-Transcript
 	]]>
@@ -1885,6 +1909,9 @@ echo.
 echo =================================
 echo.
 
+powershell.exe -ExecutionPolicy Bypass -Command "Add-AppPackage -path 'https://cdn.winget.microsoft.com/cache/source.msix.'"
+winget source update
+
 :: Installs 7-Zip
 winget.exe install --accept-source-agreements --accept-package-agreements --silent --exact --id 7zip.7zip
 :: reg.exe add "HKEY_CURRENT_USER\Software\7-Zip\Options" /v ContextMenu /t REG_DWORD /d 4390 /f
@@ -1912,6 +1939,7 @@ del /q "%Public%\Desktop\*"
 del /q "%UserProfile%\Desktop\*"
 del /q "%SystemDrive%\Users\Default\Desktop\*"
 rmdir /s /q "%SystemDrive%\Windows.old"
+rmdir /s /q "%SystemDrive%\inetpub"
 attrib +h +s "%SystemDrive%\PerfLogs"
 
 :: Renaming Local Drive Name
