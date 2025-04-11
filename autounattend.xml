@@ -1909,8 +1909,9 @@ echo.
 echo =================================
 echo.
 
-powershell.exe -ExecutionPolicy Bypass -Command "Add-AppPackage -path 'https://cdn.winget.microsoft.com/cache/source.msix.'"
-winget source update
+:: Installs / Updates the App Installer from MS Store
+winget.exe install -s msstore --id 9NBLGGH4NNS1 --accept-source-agreements --accept-package-agreements --silent --force
+winget.exe source update
 
 :: Installs 7-Zip
 winget.exe install --accept-source-agreements --accept-package-agreements --silent --exact --id 7zip.7zip
