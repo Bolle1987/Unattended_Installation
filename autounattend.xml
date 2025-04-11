@@ -1939,7 +1939,7 @@ del /q "%Public%\Desktop\*"
 del /q "%UserProfile%\Desktop\*"
 del /q "%SystemDrive%\Users\Default\Desktop\*"
 rmdir /s /q "%SystemDrive%\Windows.old"
-rmdir /s /q "%SystemDrive%\inetpub"
+attrib +h +s "%SystemDrive%\inetpub"
 attrib +h +s "%SystemDrive%\PerfLogs"
 
 :: Renaming Local Drive Name
