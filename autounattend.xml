@@ -171,19 +171,13 @@ Write-Host " "
 
 $scripts = @(
     {
-        Remove-Item -LiteralPath 'Registry::HKLM\Software\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate' -Force -ErrorAction 'SilentlyContinue';
-    }
-    {
-        Remove-Item -LiteralPath 'Registry::HKLM\Software\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate' -Force -ErrorAction 'SilentlyContinue';
-    }
-    {
         Remove-Item -Path 'C:\Users\Public\Desktop\*' -Force -ErrorAction 'SilentlyContinue';
     }
     {
-        & 'C:\Windows\Setup\Scripts\Removal.ps1';
+        & 'C:\Windows\Setup\Scripts\SystemRemoval.ps1';
     }
     {
-        & 'C:\Windows\Setup\Scripts\SetStartPins.ps1';
+        & 'C:\Windows\Setup\Scripts\SystemStartmenu.ps1';
     }
     {
         reg.exe import "C:\Windows\Setup\Scripts\System.reg";
@@ -216,14 +210,14 @@ $scripts = @(
 ]]>
 </File>
 <!-- Removes Preinstalled Things -->
-<File path="C:\Windows\Setup\Scripts\Removal.ps1">
+<File path="C:\Windows\Setup\Scripts\SystemRemoval.ps1">
 <![CDATA[
 Write-Host " "
-Write-Host "=====================" -Foregroundcolor Green
+Write-Host "===========================" -Foregroundcolor Green
 Write-Host " " -Foregroundcolor Green
-Write-Host " Bolle's Removal.ps1 " -Foregroundcolor Green
+Write-Host " Bolle's SystemRemoval.ps1 " -Foregroundcolor Green
 Write-Host " " -Foregroundcolor Green
-Write-Host "=====================" -Foregroundcolor Green
+Write-Host "===========================" -Foregroundcolor Green
 Write-Host " "
 
 $logfile = 'C:\Windows\Setup\Scripts\Removal.log'
@@ -394,7 +388,7 @@ function Invoke-RemoveItems {
 ]]>
 </File>
 <!-- Starmenue pins -->
-<File path="C:\Windows\Setup\Scripts\SetStartPins.ps1">
+<File path="C:\Windows\Setup\Scripts\SystemStartmenu.ps1">
 <![CDATA[
 $json = '{"pinnedList":[]}';
 
@@ -464,7 +458,7 @@ Windows Registry Editor Version 5.00
 [-HKEY_CLASSES_ROOT\Drive\shell\runas]
 ]]>
 </File>
-<!-- Local Machine Registry Entries - This Sets Features for the Local Machine -->
+<!-- This Sets Features for the Local Machine -->
 <File path="C:\Windows\Setup\Scripts\System.cmd">
 <![CDATA[
 @echo off & color 2 & cls & title Bolle's System.cmd (%0)
@@ -475,7 +469,7 @@ echo.
 echo ====================
 echo. & echo on
 
-:: Disables User Account Control Temporarily - Without this entry, commands in the FirstLogonOnDesktop.cmd script could fail. UAC is re-enabled in the FirstLogonOnDesktop.cmd script again.
+:: Disables User Account Control Temporarily - Without this entry, commands in the FirstLogonDesktop.cmd script could fail. UAC is re-enabled in the FirstLogonDesktop.cmd script again.
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 0 /f
 
 :: Remove frequently used folders from Quick Access
@@ -672,10 +666,6 @@ if (Test-Path 'X:\sources\sxs') {
 
 # Configure Maximum Password Age in Windows
 net.exe accounts /maxpwage:UNLIMITED
-
-# Groups or splits svchost.exe processes based on the amount of physical memory in the system to optimize performance
-$ram = (Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1kb
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control" -Name "SvcHostSplitThresholdInKB" -Type DWord -Value $ram -Force
 
 $autoLoggerDir = "$env:PROGRAMDATA\Microsoft\Diagnosis\ETLLogs\AutoLogger"
 If (Test-Path "$autoLoggerDir\AutoLogger-Diagtrack-Listener.etl") {
@@ -1093,10 +1083,6 @@ Write-Host " "
 
 $scripts = @(
     {
-        Remove-ItemProperty -LiteralPath 'Registry::HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Run' `
-            -Name OneDriveSetup -Force -ErrorAction Continue;
-    }
-    {
         $names = @(
             'ContentDeliveryAllowed',
             'FeatureManagementEnabled',
@@ -1159,7 +1145,7 @@ $scripts = @(
     [float]$increment = 100 / $scripts.Count;
 
     foreach ($script in $scripts) {
-        Write-Progress -Activity 'Running scripts to modify the default user''s registry hive. Do not close this window.' `
+        Write-Progress -Activity 'Running scripts to modify the default users registry hive. Do not close this window.' `
             -PercentComplete $complete;
 
         $start = Get-Date;
@@ -1469,20 +1455,6 @@ Write-Host " "
 
 $scripts = @(
     {
-        @(
-            Get-ChildItem -LiteralPath 'C:\' -Force;
-            Get-ChildItem -LiteralPath 'C:\Users' -Force;
-            Get-ChildItem -LiteralPath 'C:\Users\Default' -Force -Recurse -Depth 2;
-            Get-ChildItem -LiteralPath 'C:\Users\Public' -Force -Recurse -Depth 2;
-            Get-ChildItem -LiteralPath 'C:\ProgramData' -Force;
-        ) | Where-Object {
-            $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint)
-        } | Remove-Item -Force -Recurse -Verbose;
-    }
-    {
-        cmd.exe /c "rmdir C:\Windows.old";
-    }
-    {
         reg.exe import "C:\Windows\Setup\Scripts\FirstLogon.reg";
     }
     {
@@ -1552,14 +1524,14 @@ powershell -command "(New-Object -ComObject Shell.Application).NameSpace(17).Par
 ]]>
 </File>
 <!-- Script that run only a single time AFTER desktop -->
-<File path="C:\Windows\Setup\Scripts\FirstLogonOnDesktop.cmd">
+<File path="C:\Windows\Setup\Scripts\FirstLogonDesktop.cmd">
 <![CDATA[
-@echo off & color 2 & cls & title Bolle's FirstLogonOnDesktop.cmd (%0)
-echo =================================
+@echo off & color 2 & cls & title Bolle's FirstLogonDesktop.cmd (%0)
+echo ===============================
 echo.
-echo  Bolle's FirstLogonOnDesktop.cmd
+echo  Bolle's FirstLogonDesktop.cmd
 echo.
-echo =================================
+echo ===============================
 echo.
 
 :: Installs / Updates the App Installer from MS Store
@@ -1626,18 +1598,6 @@ $scripts = @(
         Remove-Item -LiteralPath "$env:USERPROFILE\Desktop\Microsoft Edge.lnk" -ErrorAction SilentlyContinue -Verbose;
     }
     {
-        Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' `
-            -Name LaunchTo -Type DWord -Value 1;
-    }
-    {
-        Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Search' `
-            -Name SearchboxTaskbarMode -Type DWord -Value 0;
-    }
-    {
-        Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' `
-            -Name VisualFXSetting -Type DWord -Value 3 -Force;
-    }
-    {
         New-Item 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Force | Out-Null;
 
         $classic = 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu';
@@ -1684,12 +1644,6 @@ $scripts = @(
         Set-ItemProperty -Path $new -Name '{645ff040-5081-101b-9f08-00aa002f954e}' -Type DWord -Value 0;
     }
     {
-        Set-ItemProperty -Path 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Start' `
-            -Name VisiblePlaces `
-            -Type Binary `
-            -Value ([Convert]::FromBase64String('L7Nn496JVUO/zmHzexipN4YIc1KqUUNCn3sndlhGWdQ='));
-    }
-    {
         reg.exe import "C:\Windows\Setup\Scripts\UserRunOnce.reg";
     }
     {
@@ -1717,7 +1671,7 @@ $scripts = @(
     }
 } *>&1 | Out-String -Width 1KB -Stream >> "C:\Windows\Setup\Scripts\UserRunOnce.log";
 
-$firstRun = 'C:\Windows\Setup\Scripts\FirstLogonOnDesktop.cmd'
+$firstRun = 'C:\Windows\Setup\Scripts\FirstLogonDesktop.cmd'
 if (Test-Path $firstRun) {
     Start-Process -FilePath $firstRun -Verb RunAs
 } else {
@@ -2204,119 +2158,29 @@ exit
 </Extensions>
 </unattend>
 <!--
-REIHENFOLGE
-
-	Specialize.ps1
-		Removal.ps1
-		System.reg
-		System.cmd
-		System.ps1
-
-	DefaultUser.ps1
-		DefaultUser.reg
-		DefaultUser.cmd
-		UserRunOnce.ps1
-			UserRunOnce.reg
-			UserRunOnce.cmd
-			FirstLogonOnDesktop.cmd
-
-	FirstLogon.ps1
-		FirstLogon.reg
-		FirstLogon.cmd
-
-AUFGABEN
-
 ┌─────────────────────────────────────────────────────────────┐
 │  SPECIALIZE.PS1  [SYSTEM · vor erstem Login]                │
 ├─────────────────────────────────────────────────────────────┤
-│  DevHome Registry-Delete                                    │
-│  Outlook Registry-Delete                                    │
-│  icacls C:\ (Authenticated Users entfernen)                 │
-│  Public Desktop leeren                                      │
-│  Removal.ps1  (Packages · Capabilities · Features)          │
-│  SetStartPins.ps1  (Win11: leeres Startmenü via MDM)        │
+│  SystemRemoval.ps1  (Packages · Capabilities · Features)    │
+│  SystemStartmenu.ps1  (Startmenü leeren)                    │
 │  System.reg  (Take Ownership Kontextmenü)                   │
-│  System.cmd                                                 │
-│    UAC deaktivieren (EnableLUA = 0)                         │
-│    Quick Access bereinigen                                  │
-│    Online-Tips deaktivieren                                 │
-│    Admin-Share deaktivieren                                 │
-│    MRT deaktivieren                                         │
-│    USB vor Login aktivieren                                 │
-│    BypassNRO                                                │
-│    DevHome/Outlook Reinstall verhindern                     │
-│    Chat/Teams Auto-Install deaktivieren                     │
-│    LongPaths aktivieren                                     │
-│    News & Interests deaktivieren                            │
-│    Consumer Features deaktivieren                           │
-│    BitLocker deaktivieren                                   │
-│    Cortana deaktivieren                                     │
-│    Aktivitätsverlauf deaktivieren                           │
-│    Standort deaktivieren                                    │
-│    Telemetrie deaktivieren (User + GPO)                     │
-│    Windows Ink deaktivieren                                 │
-│    Feedback deaktivieren                                    │
-│    Advertising ID deaktivieren                              │
-│    Windows Error Reporting deaktivieren                     │
-│    Delivery Optimization deaktivieren                       │
-│    Remote Assistance deaktivieren                           │
-│    Treiber-Suche via Windows Update                         │
-│    Multimedia-Priorität erhöhen                             │
-│    NDU-Dienst aktivieren                                    │
-│    LanmanServer IRP-Stack erhöhen                           │
-│    Meet Now ausblenden                                      │
-│    GPU-Priorität erhöhen                                    │
-│    CPU-Priorität erhöhen                                    │
-│    Game-Scheduling-Priorität                                │
-│    Edge "Managed by organisation" fixen                     │
-│    WiFi-Sense deaktivieren                                  │
-│    Storage Sense deaktivieren                               │
-│    Xbox GameDVR deaktivieren                                │
-│    Tablet Mode deaktivieren                                 │
-│    Desktop-Anmeldung erzwingen                              │
-│    Sign-in-Info nach Update deaktivieren                    │
-│    OneDrive Backup deaktivieren                             │
-│    Push To Install deaktivieren                             │
-│    Consumer Account State deaktivieren                      │
-│    Cloud Optimized Content deaktivieren                     │
-│    SmartScreen + WTDS deaktivieren                          │
-│    Fast Startup deaktivieren                                │
-│    Edge First Run + Background Mode deaktivieren            │
-│    Remote Desktop aktivieren (Firewall + Registry)          │
-│  System.ps1                                                 │
-│    fsutil disableLastAccess                                 │
-│    .NET Framework 3.5 aktivieren                            │
-│    net accounts /maxpwage:UNLIMITED                         │
-│    svchost-Splitting konfigurieren                          │
-│    Defender Auto-Sample deaktivieren                        │
-│    OneDrive entfernen                                       │
-│    Teams entfernen                                          │
-│    Teredo deaktivieren (netsh)                              │
-│    Telemetrie-Tasks deaktivieren                            │
-│    Ultimate Performance Plan aktivieren                     │
-│    Dienste auf Manual setzen                                │
-│    Verknüpfungen erstellen (auskommentiert)                 │
-│  Set-ExecutionPolicy RemoteSigned                           │
+│  System.cmd  (Local Machine Einstellungen)                  │
+│  System.ps1  (Local Machine Einstellungen)                  │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
 │  DEFAULTUSER.PS1  [SYSTEM · HKU\DefaultUser geladen]        │
 ├─────────────────────────────────────────────────────────────┤
-│  DefaultUser.reg  (leer – Platzhalter)                      │
-│  DefaultUser.cmd  (115 HKU\DefaultUser reg-Keys)            │
+│  DefaultUser.reg  (Platzhalter)                             │
+│  DefaultUser.cmd  (HKU\DefaultUser Reg-Keys)                │
 │  RunOnce-Key setzen → UserRunOnce.ps1                       │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
 │  FIRSTLOGON.PS1  [SYSTEM · FirstLogonCommands · einmalig]   │
 ├─────────────────────────────────────────────────────────────┤
-│  Junctions entfernen (C:\ · Users · Default · ProgramData)  │
-│  FirstLogon.reg  (leer – Platzhalter)                       │
-│  FirstLogon.cmd                                             │
-│    Windows.old löschen                                      │
-│    inetpub + PerfLogs verstecken                            │
-│    Laufwerk C: als "Windows" labeln                         │
-│  unattend.xml + unattend-original.xml löschen               │
+│  FirstLogon.reg  (Platzhalter)                              │
+│  FirstLogon.cmd  (Bereinigung)                              │
 └─────────────────────────────────────────────────────────────┘
 
         ↓ RunOnce triggert beim ersten User-Login
@@ -2324,34 +2188,16 @@ AUFGABEN
 ┌─────────────────────────────────────────────────────────────┐
 │  USERROUNONCE.PS1  [User-Kontext · einmalig pro neuem User] │
 ├─────────────────────────────────────────────────────────────┤
-│  Copilot AppX-Package entfernen                             │
-│  Junctions im Userprofil entfernen                          │
-│  Edge Desktop-Shortcut löschen                              │
-│  LaunchTo = ThisPC                                          │
-│  SearchboxTaskbarMode = 0                                   │
-│  VisualFXSetting = 3                                        │
-│  Desktop-Icons konfigurieren (HideDesktopIcons)             │
-│  Start VisiblePlaces (Binary)                               │
-│  UserRunOnce.reg  (HKCU Import)                             │
-│  UserRunOnce.cmd                                            │
-│    PowerShell-Profil-Ordner erstellen + verstecken          │
-│    User Desktop leeren                                      │
-│    109 HKCU reg-Keys                                        │
-│  Explorer neu starten                                       │
-│  → Start-Process FirstLogonOnDesktop.cmd -Verb RunAs        │
-│  → (sonst: shutdown -r -t 1)                                │
+│  UserRunOnce.reg  (HKCU Reg-Keys Import)                    │
+│  UserRunOnce.cmd  (Meistens HKCU Reg-Keys setzen)           │
+│  → Start FirstLogonDesktop.cmd oder Neustart                │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│  FIRSTLOGONONDESKTOP.CMD  [User · elevated · einmalig]      │
+│  FIRSTLOGONDESKTOP.cmd  [User · elevated · einmalig]        │
 ├─────────────────────────────────────────────────────────────┤
-│  winget source update                                       │
-│  7-Zip installieren                                         │
-│  Start Menu 7-Zip Ordner löschen                            │
-│  UniGetUI installieren                                      │
-│  Desktop leeren (Public + User + Default)                   │
-│  UAC wieder aktivieren (EnableLUA = 3)                      │
-│  shutdown -r -t 1                                           │
-│  ren %0 *.txt  (verhindert Wiederholung bei neuem User)     │
+│  Softwareinstallationen                                     │
+│  Bereinigungen                                              │
+│  UAC (wieder) aktivieren                                    │
 └─────────────────────────────────────────────────────────────┘
 -->
