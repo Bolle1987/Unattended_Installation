@@ -665,8 +665,10 @@ Start-Transcript -Path $logFile
 # Don't Update Last Access Time Stamp - This Can Improve File System Performance
 fsutil.exe behavior set disableLastAccess 1
 
-# Enables .NET Framework 3.5
-DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:X:\sources\sxs /LimitAccess
+# Enables .NET Framework 3.5 (Test Path because LTSC Setup could freeze)
+if (Test-Path 'X:\sources\sxs') {
+    DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:X:\sources\sxs /LimitAccess
+}
 
 # Configure Maximum Password Age in Windows
 net.exe accounts /maxpwage:UNLIMITED
