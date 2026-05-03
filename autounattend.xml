@@ -330,7 +330,7 @@ function Get-TypeConfig {
     }
 }
 
-# Generic remove funktion
+# Generic remove function
 function Invoke-RemoveItems {
     param(
         [string]   $Type,
