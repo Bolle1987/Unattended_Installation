@@ -220,7 +220,7 @@ Write-Host " " -Foregroundcolor Green
 Write-Host "===========================" -Foregroundcolor Green
 Write-Host " "
 
-$logfile = 'C:\Windows\Setup\Scripts\Removal.log'
+$logfile = 'C:\Windows\Setup\Scripts\SystemRemoval.log'
 $global:PendingReboot = $false
 
 # 1. Packages
@@ -481,6 +481,9 @@ reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /
 :: Disables Adminshare
 reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v AutoShareWks /t REG_DWORD /d 0 /f
 
+:: Hides last used Files (no clearing/deleting, ohnly hide!)
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v NoRecentDocsMenu /t REG_DWORD /d 1 /f
+ 
 :: Disable Malicious Software Removal Tool From Installing
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\MRT" /v DontOfferThroughWUAU /t REG_DWORD /d 1 /f
 
@@ -659,10 +662,10 @@ Start-Transcript -Path $logFile
 # Don't Update Last Access Time Stamp - This Can Improve File System Performance
 fsutil.exe behavior set disableLastAccess 1
 
-# Enables .NET Framework 3.5 (Test Path because LTSC Setup could freeze)
-if (Test-Path 'X:\sources\sxs') {
-    DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:X:\sources\sxs /LimitAccess
-}
+# Enables .NET Framework 3.5 if available
+# if (Test-Path 'X:\sources\sxs') {
+# DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:X:\sources\sxs /LimitAccess
+# }
 
 # Configure Maximum Password Age in Windows
 net.exe accounts /maxpwage:UNLIMITED
@@ -2086,72 +2089,143 @@ if '%errorlevel%' == '0' ( goto gotPrivileges
 exit /b
 ]]>
 </File>
-<!-- Adds Script to open an Activation Menu -->
-<File path="C:\Windows\Setup\Scripts\_MS_Activation.cmd">
+<!-- Adds Script to reinstall MS Store (For LTSC IOT Installations) -->
+<File path="C:\Windows\Setup\Scripts\_MS_Store_Reinstall.cmd">
 <![CDATA[
-@echo off & color 2 & cls & title Activation Tool (%0)
+@echo off & color 2 & cls & title Bolle's Reinstall MS Store (%0)
+if "%~1"=="1" goto OPTION1
 
-goto checkPrivileges
-:gotPrivileges
+:MENU
+cls
+echo ================================
+echo.
+echo  Bolle's Reinstall_MS_Store.cmd
+echo.
+echo ================================
+echo.
+echo  [1] Microsoft Store neu installieren (wsreset)
+echo  [2] Xbox App Downloadseite oeffnen
+echo.
+set /p CHOICE=Bitte Auswahl treffen: 
 
-echo activation key removed - not for public
+if "%CHOICE%"=="1" goto OPTION1
+if "%CHOICE%"=="2" goto OPTION2
+echo.
+echo Beende
+timeout /t 1 >nul
+echo.
 exit
 
-:checkPrivileges 
-NET FILE 1>NUL 2>NUL
-if '%errorlevel%' == '0' ( goto gotPrivileges 
-) else ( powershell "saps -filepath '%0' -verb runas" >nul 2>&1)
-exit /b
-]]>
-</File>
-<!-- Adds Script with Infos howto reinstall MS Tools -->
-<File path="C:\Windows\Setup\Scripts\_MS_Tools_Reinstall_Command.cmd">
-<![CDATA[
-@echo off & color 2 & cls & title Bolle's MS Tools Reinstaller (%0)
-echo ================================
-echo.
-echo  Bolle's MS_Tools_Reinstall.cmd
-echo.
-echo ================================
-echo.
-echo Reinstall can take a few minutes. There will be no info.
-echo Just look into start menue till "Microsoft Store" appears.
-echo.
-echo Press any key to start reinstall MS Store
-echo.
+:OPTION1
+goto CHECK_PRIVILEGES
 
-goto checkPrivileges
-:gotPrivileges
-
-pause >nul 2>nul
+:GOT_PRIVILEGES
+cls
+echo ======================================
+echo.
+echo  Microsoft Store wird neu installiert
+echo.
+echo ======================================
+echo.
+echo Dies kann einige Minuten dauern.
+echo Es gibt keine Statusanzeige.
+echo.
+echo Warte, bis der Microsoft Store im Startmenue erscheint.
+echo.
 powershell.exe -ExecutionPolicy Bypass -Command "wsreset -i"
+echo.
+pause
 exit
 
-:checkPrivileges 
-NET FILE 1>NUL 2>NUL
-if '%errorlevel%' == '0' ( goto gotPrivileges 
-) else ( powershell "saps -filepath '%0' -verb runas" >nul 2>&1)
-exit /b
-]]>
-</File>
-<!-- Adds Script with Infos howto reinstall MS Tools -->
-<File path="C:\Windows\Setup\Scripts\_MS_Tools_Reinstall_Download.cmd">
-<![CDATA[
-@echo off & color 2 & cls & title Bolle's MS Tools Reinstaller (%0)
-echo ================================
+:CHECK_PRIVILEGES
+NET FILE >nul 2>&1
+if "%ERRORLEVEL%"=="0" (
+    goto GOT_PRIVILEGES
+) else (
+    powershell -Command "Start-Process '%~f0' -Verb RunAs -ArgumentList '1'"
+    exit /b
+)
+
+:OPTION2
+cls
+echo ===================
 echo.
-echo  Bolle's MS_Tools_Reinstall.cmd
+echo  Xbox App Download
 echo.
-echo ================================
+echo ===================
 echo.
-echo Download, Install and Launch the Xbox App for Windows.
-echo It will prompt you to install missing dependencies.
-echo The Microsoft Store or App Installer (winget) are one of them.
+echo Die Xbox App installiert fehlende Abhaengigkeiten
+echo wie Microsoft Store oder App Installer (winget).
 echo.
-echo Press any key to open https://www.xbox.com/en-US/apps/xbox-app-for-pc
+echo Druecke eine beliebige Taste um die Downloadseite
+echo zu oeffen: https://www.xbox.com/apps/xbox-app-for-pc
 echo.
 pause >nul 2>nul
-start https://www.xbox.com/en-US/apps/xbox-app-for-pc
+start https://www.xbox.com/apps/xbox-app-for-pc
+exit
+]]>
+</File>
+<!-- Adds Script to switch between Light/Dark Mode even when your Windows is not activated -->
+<File path="C:\Windows\Setup\Scripts\_MS_ThemeSwitcher.cmd">
+<![CDATA[
+@echo off & color 2 & cls & title Bolle's Windows Dark / Light Theme Switcher (%0)
+
+:MENU
+cls
+echo =============================================
+echo.
+echo  Bolle's Windows Dark / Light Theme Switcher
+echo.
+echo =============================================
+echo.
+echo  [1] Dark Mode aktivieren
+echo  [2] Light Mode aktivieren
+echo  [0] Beenden
+echo.
+set CHOICE=
+set /p CHOICE=Bitte Auswahl treffen (leer = Wechsel): 
+
+if "%CHOICE%"=="1" goto DARK
+if "%CHOICE%"=="2" goto LIGHT
+if "%CHOICE%"=="0" exit
+if "%CHOICE%"=="" goto TOGGLE
+echo.
+echo Beende
+timeout /t 1 >nul
+exit
+
+:DARK
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v AppsUseLightTheme /t REG_DWORD /d 0 /f >nul
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v SystemUsesLightTheme /t REG_DWORD /d 0 /f >nul
+goto APPLY
+
+:LIGHT
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v AppsUseLightTheme /t REG_DWORD /d 1 /f >nul
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v SystemUsesLightTheme /t REG_DWORD /d 1 /f >nul
+goto APPLY
+
+:TOGGLE
+
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v SystemUsesLightTheme 2>nul | findstr /i "0x0" >nul
+if %ERRORLEVEL%==0 goto LIGHT
+
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v SystemUsesLightTheme 2>nul | findstr /i "0x1" >nul
+if %ERRORLEVEL%==0 goto DARK
+
+echo.
+echo Wert kann nicht ausgelesen werden...
+echo.
+timeout /t 2 >nul
+goto MENU
+
+:APPLY
+echo.
+echo Design wird angewendet ...
+taskkill /f /im explorer.exe >nul 2>&1
+start explorer.exe
+timeout /t 2 >nul
+echo Fertig!
+timeout /t 1 >nul
 exit
 ]]>
 </File>
