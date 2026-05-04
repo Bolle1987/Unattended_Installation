@@ -108,6 +108,13 @@
 				-->
 			</RunSynchronous>
 		</component>
+		<component name="Microsoft-Windows-Shell-Setup"
+			processorArchitecture="amd64"
+			publicKeyToken="31bf3856ad364e35"
+			language="neutral"
+			versionScope="nonSxS">
+			<TimeZone>W. Europe Standard Time</TimeZone>
+		</component>
 	</settings>
 	<settings pass="auditSystem"></settings>
 	<settings pass="auditUser"></settings>
@@ -281,7 +288,6 @@ $capabilities = @(
     'Browser.InternetExplorer',
     'MathRecognizer',
     'OneCoreUAP.OneSync',
-    'OpenSSH.Client',
     'Microsoft.Windows.PowerShell.ISE',
     'App.Support.QuickAssist',
     'Language.Speech',
@@ -469,7 +475,7 @@ echo.
 echo ====================
 echo. & echo on
 
-:: Disables User Account Control Temporarily - Without this entry, commands in the FirstLogonDesktop.cmd script could fail. UAC is re-enabled in the FirstLogonDesktop.cmd script again.
+:: Disables User Account Control Temporarily - Without this entry, commands in the FirstLogonDesktop.cmd will show Admin prompt. UAC is re-enabled in the FirstLogon.ps1 script again.
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 0 /f
 
 :: Remove frequently used folders from Quick Access
@@ -637,11 +643,14 @@ reg.exe add "HKLM\Software\Policies\Microsoft\Edge\Recommended" /v BackgroundMod
 reg.exe add "HKLM\Software\Policies\Microsoft\Edge\Recommended" /v StartupBoostEnabled /t REG_DWORD /d 0 /f
 
 :: Enable Remote Desktop
-reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
-netsh advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes
+:: reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+:: netsh advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes
 
 :: Remove Authenticated Users write access on C:\
 :: icacls C:\ /remove:g "*S-1-5-11"
+
+:: Adds Authenticated Users write access on C:\Windows\Setup\Scripts
+icacls "C:\Windows\Setup\Scripts" /grant "*S-1-5-11:(OI)(CI)M"
 ]]>
 </File>
 <!-- System Tweaks PowerShell -->
@@ -1486,6 +1495,9 @@ $scripts = @(
         $complete += $increment;
     }
 } *>&1 | Out-String -Width 1KB -Stream >> "C:\Windows\Setup\Scripts\FirstLogon.log";
+
+:: Enables UAC (User Account Control - Credentials without Secure Desktop)
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 3 /f
 ]]>
 </File>
 <!-- Registryimport that run only a single time BEFORE desktop (system privileges) -->
@@ -1526,7 +1538,7 @@ label %SystemDrive% Windows
 powershell -command "(New-Object -ComObject Shell.Application).NameSpace(17).ParseName('D:').InvokeVerb('Eject')" 2>nul
 ]]>
 </File>
-<!-- Script that run only a single time AFTER desktop -->
+<!-- Script that run only a single time AFTER desktop (admin privileges without UAC prompt) -->
 <File path="C:\Windows\Setup\Scripts\FirstLogonDesktop.cmd">
 <![CDATA[
 @echo off & color 2 & cls & title Bolle's FirstLogonDesktop.cmd (%0)
@@ -1568,10 +1580,8 @@ del /q "%Public%\Desktop\*"
 del /q "%UserProfile%\Desktop\*"
 del /q "%SystemDrive%\Users\Default\Desktop\*"
 
-:: (Re)Enables User Account Control (Default Value) and restarts to take effect
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 3 /f
+:: Deactivates itself, so new Useraccounts will not start this Script again at first login. Also restart for reenabling UAC (FirstLogon.ps1)
 shutdown -r -t 1
-:: Renames or deletes itself, so new Useraccounts will not start this Script again at first login
 :: del /q %0
 ren %0 *.txt
 ]]>
@@ -2238,8 +2248,8 @@ exit
 │  SystemRemoval.ps1  (Packages · Capabilities · Features)    │
 │  SystemStartmenu.ps1  (Startmenü leeren)                    │
 │  System.reg  (Take Ownership Kontextmenü)                   │
-│  System.cmd  (Local Machine Einstellungen)                  │
-│  System.ps1  (Local Machine Einstellungen)                  │
+│  System.cmd  (Local Machine Konfig · UAC deaktivieren)      │
+│  System.ps1  (Local Machine Konfig)                         │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -2255,6 +2265,7 @@ exit
 ├─────────────────────────────────────────────────────────────┤
 │  FirstLogon.reg  (Platzhalter)                              │
 │  FirstLogon.cmd  (Bereinigung)                              │
+│  UAC (wieder) aktivieren                                    │
 └─────────────────────────────────────────────────────────────┘
 
         ↓ RunOnce triggert beim ersten User-Login
@@ -2272,6 +2283,5 @@ exit
 ├─────────────────────────────────────────────────────────────┤
 │  Softwareinstallationen                                     │
 │  Bereinigungen                                              │
-│  UAC (wieder) aktivieren                                    │
 └─────────────────────────────────────────────────────────────┘
 -->
