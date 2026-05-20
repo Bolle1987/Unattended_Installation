@@ -287,7 +287,6 @@ $capabilities = @(
     'Language.Handwriting',
     'Browser.InternetExplorer',
     'MathRecognizer',
-    'OneCoreUAP.OneSync',
     'Microsoft.Windows.PowerShell.ISE',
     'App.Support.QuickAssist',
     'Language.Speech',
@@ -491,7 +490,7 @@ reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v 
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v NoRecentDocsMenu /t REG_DWORD /d 1 /f
  
 :: Disable Malicious Software Removal Tool From Installing
-reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\MRT" /v DontOfferThroughWUAU /t REG_DWORD /d 1 /f
+:: reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\MRT" /v DontOfferThroughWUAU /t REG_DWORD /d 1 /f
 
 :: Enable USB Devices before Login (USB Fingerprintreader for example)
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\FVE" /v DisableExternalDMAUnderLock /t REG_DWORD /d 0 /f
@@ -525,9 +524,9 @@ reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v AllowNewsAndInterests /t R
 :: Disables Windows Consumer Features Like App Promotions etc.
 reg.exe add "HKLM\Software\Policies\Microsoft\Windows\CloudContent" /v DisableWindowsConsumerFeatures /t REG_DWORD /d 1 /f
 
-:: Disables Bitlocker Auto Encryption on Windows 11 24H2 and Onwards
+:: Prevents silent auto-encryption only, manual/Intune BitLocker still works
 reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\BitLocker" /v PreventDeviceEncryption /t REG_DWORD /d 1 /f
-reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\EnhancedStorageDevices" /v TCGSecurityActivationDisabled /t REG_DWORD /d 1 /f
+:: reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\EnhancedStorageDevices" /v TCGSecurityActivationDisabled /t REG_DWORD /d 1 /f
 
 :: Disables Cortana
 reg.exe add "HKLM\Software\Policies\Microsoft\Windows\Windows Search" /v AllowCortana /t REG_DWORD /d 0 /f
@@ -543,10 +542,10 @@ reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Sensor\Overrides\
 reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\lfsvc\Service\Configuration" /v Status /t REG_DWORD /d 0 /f
 reg.exe add "HKLM\SYSTEM\Maps" /v AutoUpdateEnabled /t REG_DWORD /d 0 /f
 
-:: Disables Telemetry User/App
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
-:: Disables Telemetry GPO
-reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+:: Minimal Telemetry User/App
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 1 /f
+:: Minimal Telemetry GPO
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 1 /f
 
 :: Disables Windows Ink Workspace
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\WindowsInkWorkspace" /v AllowWindowsInkWorkspace /t REG_DWORD /d 0 /f
@@ -570,8 +569,8 @@ reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" /v fAllowT
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching" /v SearchOrderConfig /t REG_DWORD /d 1 /f
 
 :: Gives Multimedia Applications like Games and Video Editing a Higher Priority
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 0 /f
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v NetworkThrottlingIndex /t REG_DWORD /d 10 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 10 /f
+:: reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v NetworkThrottlingIndex /t REG_DWORD /d 10 /f
 
 :: Enables NDU (Network Diagnostic Usage) Service on Startup
 reg.exe add "HKLM\SYSTEM\ControlSet001\Services\Ndu" /v Start /t REG_DWORD /d 2 /f
@@ -590,9 +589,6 @@ reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\System
 
 :: Gives Games a higher priority in the system's scheduling
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Scheduling Category" /t REG_SZ /d High /f
-
-:: Fix Managed by your organization in Edge
-reg.exe delete "HKLM\SOFTWARE\Policies\Microsoft\Edge" /f
 
 :: Set Registry Keys to Disable Wifi-Sense
 reg.exe add "HKLM\Software\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting" /v Value /t REG_DWORD /d 0 /f
@@ -635,12 +631,13 @@ reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v 
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Systray" /v HideSystray /t REG_DWORD /d 1 /f
 
 :: Disable Fast Startup
-reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f
+:: reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f
 
-:: Disable Edge First Run Experience and Background Mode
-reg.exe add "HKLM\Software\Policies\Microsoft\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f
-reg.exe add "HKLM\Software\Policies\Microsoft\Edge\Recommended" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f
-reg.exe add "HKLM\Software\Policies\Microsoft\Edge\Recommended" /v StartupBoostEnabled /t REG_DWORD /d 0 /f
+:: Edge Settings
+:: reg.exe delete "HKLM\SOFTWARE\Policies\Microsoft\Edge" /f
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f
+:: reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Edge\Recommended" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f
+:: reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Edge\Recommended" /v StartupBoostEnabled /t REG_DWORD /d 0 /f
 
 :: Enable Remote Desktop
 :: reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
@@ -671,20 +668,14 @@ Start-Transcript -Path $logFile
 # Don't Update Last Access Time Stamp - This Can Improve File System Performance
 fsutil.exe behavior set disableLastAccess 1
 
-# Enables .NET Framework 3.5 if available
-# if (Test-Path 'X:\sources\sxs') {
-# DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:X:\sources\sxs /LimitAccess
-# }
+<# Enables .NET Framework 3.5 if available
+if (Test-Path 'X:\sources\sxs') {
+DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /Source:X:\sources\sxs /LimitAccess
+}
+#>
 
 # Configure Maximum Password Age in Windows
 net.exe accounts /maxpwage:UNLIMITED
-
-$autoLoggerDir = "$env:PROGRAMDATA\Microsoft\Diagnosis\ETLLogs\AutoLogger"
-If (Test-Path "$autoLoggerDir\AutoLogger-Diagtrack-Listener.etl") {
-Remove-Item "$autoLoggerDir\AutoLogger-Diagtrack-Listener.etl"
-}
-$icaclsCommand = "icacls `"$autoLoggerDir`" /deny SYSTEM:`"(OI)(CI)F`""
-Invoke-Expression $icaclsCommand | Out-Null
 
 # Disable Defender Auto Sample Submission
 Set-MpPreference -SubmitSamplesConsent 2 -ErrorAction Continue | Out-Null
@@ -723,7 +714,7 @@ $proc = Start-Process -FilePath $FilePath -Args $ProcessArgs -PassThru
 $proc.WaitForExit()
 }
 
-# Disables Teredo
+<# Disables Teredo
 $registryKeysTeredo = @(
 @{Path = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters"; Name = "DisabledComponents"; Type = "DWord"; Value = 1}
 )
@@ -731,6 +722,7 @@ foreach ($key in $registryKeysTeredo) {
 New-ItemProperty -Path $key.Path -Name $key.Name -PropertyType $key.Type -Value $key.Value -Force
 }
 netsh interface teredo set state disabled
+#>
 
 # Disables Telemetry
 # Disable Scheduled Tasks
@@ -760,10 +752,9 @@ powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
 powercfg -setactive e9a42b02-d5df-448d-aa00-03f14749eb61
 
 # Set Services to Manual
-Write-Output 'Set Services to Manual: Turns a bunch of system services to manual that do not need to be running all the time.'
 Set-Service -Name 'AJRouter' -StartupType Disabled -ErrorAction Continue
 Set-Service -Name 'ALG' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'AppIDSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'AppIDSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'AppMgmt' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'AppReadiness' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'AppVClient' -StartupType Disabled -ErrorAction Continue
@@ -783,7 +774,7 @@ Set-Service -Name 'BrokerInfrastructure' -StartupType Automatic -ErrorAction Con
 Set-Service -Name 'Browser' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'BthAvctpSvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'BthHFSrv' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'CDPSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'CDPSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'CDPUserSvc_*' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'COMSysApp' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'CaptureService_*' -StartupType Manual -ErrorAction Continue
@@ -793,7 +784,7 @@ Set-Service -Name 'ConsentUxUserSvc_*' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'CoreMessagingRegistrar' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'CredentialEnrollmentManagerUserSvc_*' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'CryptSvc' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'CscService' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'CscService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DPS' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'DcomLaunch' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'DcpSvc' -StartupType Manual -ErrorAction Continue
@@ -804,22 +795,22 @@ Set-Service -Name 'DeviceInstall' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DevicePickerUserSvc_*' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DevicesFlowUserSvc_*' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'Dhcp' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'DiagTrack' -StartupType Disabled -ErrorAction Continue
+Set-Service -Name 'DiagTrack' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DialogBlockingService' -StartupType Disabled -ErrorAction Continue
 Set-Service -Name 'DispBrokerDesktopSvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'DisplayEnhancementService' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'DmEnrollmentSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'DmEnrollmentSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'Dnscache' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'DoSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DsSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DsmSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'DusmSvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'EFS' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'EapHost' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'EapHost' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'EntAppSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'EventLog' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'EventSystem' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'FDResPub' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'FDResPub' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'Fax' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'FontCache' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'FrameServer' -StartupType Manual -ErrorAction Continue
@@ -829,7 +820,7 @@ Set-Service -Name 'HomeGroupListener' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'HomeGroupProvider' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'HvHost' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'IEEtwCollectorService' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'IKEEXT' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'IKEEXT' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'InstallService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'InventorySvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'IpxlatCfgSvc' -StartupType Manual -ErrorAction Continue
@@ -845,22 +836,22 @@ Set-Service -Name 'MSiSCSI' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'MapsBroker' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'McpManagementService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'MessagingService_*' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'MicrosoftEdgeElevationService' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'MicrosoftEdgeElevationService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'MixedRealityOpenXRSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'MpsSvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'MsKeyboardFilter' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'NPSMSvc_*' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'NaturalAuthentication' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'NcaSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'NcaSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'NcbService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'NcdAutoSetup' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'NetSetupSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'NetTcpPortSharing' -StartupType Disabled -ErrorAction Continue
 # Set-Service -Name 'Netlogon' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'Netman' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'NgcCtnrSvc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'NgcSvc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'NlaSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'Netman' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'NgcCtnrSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'NgcSvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'NlaSvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'OneSyncSvc_*' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'P9RdrService_*' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'PNRPAutoReg' -StartupType Manual -ErrorAction Continue
@@ -925,7 +916,7 @@ Set-Service -Name 'Themes' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'TieringEngineService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'TimeBroker' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'TimeBrokerSvc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'TokenBroker' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'TokenBroker' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'TrkWks' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'TroubleshootingSvc' -StartupType Manual -ErrorAction Continue
 # Set-Service -Name 'TrustedInstaller' -StartupType Manual -ErrorAction Continue
@@ -949,7 +940,7 @@ Set-Service -Name 'WMPNetworkSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WManSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WPDBusEnum' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WSService' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'WSearch' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'WSearch' -StartupType Manual -ErrorAction Continue
 # Set-Service -Name 'WaaSMedicSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WalletService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WarpJITSvc' -StartupType Manual -ErrorAction Continue
@@ -964,12 +955,12 @@ Set-Service -Name 'Wecsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WerSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WiaRpc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WinDefend' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'WinHttpAutoProxySvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'WinHttpAutoProxySvc' -StartupType Manual -ErrorAction Continue
 # Set-Service -Name 'WinRM' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'Winmgmt' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'WlanSvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'WpcMonSvc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'WpnService' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'WpnService' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'WpnUserService_*' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'WwanSvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'XblAuthManager' -StartupType Manual -ErrorAction Continue
@@ -980,17 +971,17 @@ Set-Service -Name 'autotimesvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'bthserv' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'camsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'cbdhsvc_*' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'cloudidsvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'cloudidsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'dcsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'defragsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'diagnosticshub.standardcollector.service' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'diagsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'dmwappushservice' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'dot3svc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'edgeupdate' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'edgeupdatem' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'dot3svc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'edgeupdate' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'edgeupdatem' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'embeddedmode' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'fdPHost' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'fdPHost' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'fhsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'gpsvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'hidserv' -StartupType Manual -ErrorAction Continue
@@ -1001,22 +992,22 @@ Set-Service -Name 'lltdsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'lmhosts' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'mpssvc' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'msiserver' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'netprofm' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'netprofm' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'nsi' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'p2pimsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'p2psvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'perceptionsimulation' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'pla' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'seclogon' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'seclogon' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'shpamsvc' -StartupType Disabled -ErrorAction Continue
 Set-Service -Name 'smphost' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'spectrum' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'sppsvc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'ssh-agent' -StartupType Disabled -ErrorAction Continue
+# Set-Service -Name 'ssh-agent' -StartupType Disabled -ErrorAction Continue
 Set-Service -Name 'svsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'swprv' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'tiledatamodelsvc' -StartupType Automatic -ErrorAction Continue
-Set-Service -Name 'tzautoupdate' -StartupType Disabled -ErrorAction Continue
+# Set-Service -Name 'tzautoupdate' -StartupType Disabled -ErrorAction Continue
 Set-Service -Name 'uhssvc' -StartupType Disabled -ErrorAction Continue
 Set-Service -Name 'upnphost' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'vds' -StartupType Manual -ErrorAction Continue
@@ -1036,7 +1027,7 @@ Set-Service -Name 'webthreatdefsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'webthreatdefusersvc_*' -StartupType Automatic -ErrorAction Continue
 Set-Service -Name 'wercplsupport' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'wisvc' -StartupType Manual -ErrorAction Continue
-Set-Service -Name 'wlidsvc' -StartupType Manual -ErrorAction Continue
+# Set-Service -Name 'wlidsvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'wlpasvc' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'wmiApSrv' -StartupType Manual -ErrorAction Continue
 Set-Service -Name 'workfolderssvc' -StartupType Manual -ErrorAction Continue
@@ -1525,8 +1516,12 @@ echo.
 echo ========================
 echo.
 
+:: Remove LabConfig bypass keys
+reg.exe delete "HKLM\SYSTEM\Setup\LabConfig" /f 2>nul
+
 :: Remove previous Windows installation
 rmdir /s /q "%SystemDrive%\Windows.old"
+
 :: Hide IIS default folder and performance logs folder
 attrib +h +s "%SystemDrive%\inetpub"
 attrib +h +s "%SystemDrive%\PerfLogs"
@@ -1548,6 +1543,13 @@ echo  Bolle's FirstLogonDesktop.cmd
 echo.
 echo ===============================
 echo.
+
+:: Verify winget is available before proceeding
+where winget.exe >nul 2>&1
+	if %ERRORLEVEL% neq 0 (
+    echo winget not available - skipping software installation
+    goto CLEANUP
+	)
 
 :: Installs / Updates the App Installer from MS Store
 :: winget.exe install -s msstore --id 9NBLGGH4NNS1 --accept-source-agreements --accept-package-agreements --silent --force
@@ -1576,12 +1578,13 @@ winget.exe install --accept-source-agreements --accept-package-agreements --sour
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id KeePassXCTeam.KeePassXC
 
 :: Cleaning Up
+:CLEANUP
 del /q "%Public%\Desktop\*"
 del /q "%UserProfile%\Desktop\*"
 del /q "%SystemDrive%\Users\Default\Desktop\*"
 
 :: Deactivates itself, so new Useraccounts will not start this Script again at first login. Also restart for reenabling UAC (FirstLogon.ps1)
-shutdown -r -t 1
+shutdown -r -t 5 -c "Finalizing setup. Restarting in a few seconds."
 :: del /q %0
 ren %0 *.txt
 ]]>
@@ -1601,11 +1604,27 @@ $scripts = @(
         Get-AppxPackage -Name 'Microsoft.Windows.Ai.Copilot.Provider' | Remove-AppxPackage;
     }
     {
-        @(
-            Get-ChildItem -LiteralPath $env:USERPROFILE -Force -Recurse -Depth 2;
-        ) | Where-Object {
-            $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint)
-        } | Remove-Item -Force -Recurse -Verbose;
+		# Remove only known problematic reparse points, not all symlinks blindly
+		$knownJunctions = @(
+			"$env:USERPROFILE\Application Data",
+			"$env:USERPROFILE\Cookies",
+			"$env:USERPROFILE\Local Settings",
+			"$env:USERPROFILE\My Documents",
+			"$env:USERPROFILE\NetHood",
+			"$env:USERPROFILE\PrintHood",
+			"$env:USERPROFILE\Recent",
+			"$env:USERPROFILE\SendTo",
+			"$env:USERPROFILE\Start Menu",
+			"$env:USERPROFILE\Templates"
+		)
+		foreach ($path in $knownJunctions) {
+			if (Test-Path $path) {
+				$item = Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
+				if ($item.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint)) {
+					Remove-Item -LiteralPath $path -Force -Recurse -ErrorAction SilentlyContinue -Verbose
+				}
+			}
+		}
     }
     {
         Remove-Item -LiteralPath "$env:USERPROFILE\Desktop\Microsoft Edge.lnk" -ErrorAction SilentlyContinue -Verbose;
@@ -1688,7 +1707,7 @@ $firstRun = 'C:\Windows\Setup\Scripts\FirstLogonDesktop.cmd'
 if (Test-Path $firstRun) {
     Start-Process -FilePath $firstRun -Verb RunAs
 } else {
-    shutdown -r -t 1
+    shutdown -r -t 5 -c "Finalizing setup. Restarting in a few seconds."
 }
 ]]>
 </File>
