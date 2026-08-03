@@ -184,9 +184,6 @@ $scripts = @(
         & 'C:\Windows\Setup\Scripts\SystemRemoval.ps1';
     }
     {
-        & 'C:\Windows\Setup\Scripts\SystemStartmenu.ps1';
-    }
-    {
         reg.exe import "C:\Windows\Setup\Scripts\System.reg";
     }
     {
@@ -392,21 +389,6 @@ function Invoke-RemoveItems {
 } *>&1 | Out-String -Width 1KB -Stream >> $logfile
 ]]>
 </File>
-<!-- Starmenue pins -->
-<File path="C:\Windows\Setup\Scripts\SystemStartmenu.ps1">
-<![CDATA[
-$json = '{"pinnedList":[]}';
-
-if ([System.Environment]::OSVersion.Version.Build -lt 20000) {
-    return;
-}
-
-$key = 'Registry::HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start';
-
-New-Item -Path $key -ItemType 'Directory' -ErrorAction 'SilentlyContinue';
-Set-ItemProperty -LiteralPath $key -Name 'ConfigureStartPins' -Value $json -Type 'String';
-]]>
-</File>
 <!-- System Tweaks Registry -->
 <File path="C:\Windows\Setup\Scripts\System.reg">
 <![CDATA[
@@ -500,6 +482,9 @@ reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /
 
 :: Prevents Dev Home Installation
 reg.exe delete "HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate" /f
+
+:: Prevents automatic download and installation of manufacturer-specific apps for connected devices.
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Device Metadata" /v PreventDeviceMetadataFromNetwork /t REG_DWORD /d 1 /f
 
 :: Prevents New Outlook for Windows Installation
 reg.exe delete "HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate" /f
@@ -1198,10 +1183,6 @@ reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Explorer\
 :: DWM Color
 reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\DWM" /v ColorPrevalence /t REG_DWORD /d 0 /f
 
-:: StartLayout (Win10 Fallback)
-reg.exe add "HKU\DefaultUser\Software\Policies\Microsoft\Windows\Explorer" /v StartLayoutFile /t REG_SZ /d "C:\Windows\Setup\Scripts\TaskbarLayoutModification.xml" /f
-reg.exe add "HKU\DefaultUser\Software\Policies\Microsoft\Windows\Explorer" /v LockedStartLayout /t REG_DWORD /d 1 /f
-
 :: Disabling the Delivery of Personalized or Suggested Content Like App Suggestions, Tips, and Advertisements in Windows
 reg.exe add "HKU\DefaultUser\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v ContentDeliveryAllowed /t REG_DWORD /d 0 /f
 reg.exe add "HKU\DefaultUser\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v FeatureManagementEnabled /t REG_DWORD /d 0 /f
@@ -1562,13 +1543,11 @@ winget.exe install --accept-source-agreements --accept-package-agreements --sour
 :: robocopy "%ProgramData%\Microsoft\Windows\Start Menu\Programs\7-Zip" "%ProgramData%\Microsoft\Windows\Start Menu\Programs" "*.lnk" /W:0 /R:0
 rmdir /s /q "%ProgramData%\Microsoft\Windows\Start Menu\Programs\7-Zip"
 
-:: Installs UniGetUI with dependencies
-winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Devolutions.UniGetUI
-
 :: Installing Software Examples
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Brave.Brave
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Google.Chrome
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Mozilla.Firefox
+:: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Devolutions.UniGetUI
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Mozilla.Thunderbird
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id Valve.Steam
 :: winget.exe install --accept-source-agreements --accept-package-agreements --source winget --silent --exact --id VideoLAN.VLC
@@ -2005,27 +1984,6 @@ attrib +h +s "%UserProfile%\Documents\WindowsPowerShell"
 del /q "%UserProfile%\Desktop\*"
 ]]>
 </File>
-<!-- Taskbar pins -->
-<File path="C:\Windows\Setup\Scripts\TaskbarLayoutModification.xml">
-<![CDATA[
-<LayoutModificationTemplate
-    xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification"
-    xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout"
-    xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout"
-    xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout"
-    Version="1">
-
-    <CustomTaskbarLayoutCollection PinListPlacement="Replace">
-        <defaultlayout:TaskbarLayout>
-            <taskbar:TaskbarPinList>
-                <taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" />
-            </taskbar:TaskbarPinList>
-        </defaultlayout:TaskbarLayout>
-    </CustomTaskbarLayoutCollection>
-
-</LayoutModificationTemplate>
-]]>
-</File>
 <!-- Startmenue clear -->
 <File path="C:\Users\Default\AppData\Local\Microsoft\Windows\Shell\LayoutModification.xml">
 <![CDATA[
@@ -2042,30 +2000,56 @@ del /q "%UserProfile%\Desktop\*"
 <!-- Adds Script to start an Toolbox -->
 <File path="C:\Windows\Setup\Scripts\_MS_Toolbox.cmd">
 <![CDATA[
-@echo off & color 2 & cls & title Bolle's MS Toolbox (%0)
+@echo off & setlocal & color 2 & cls & title Bolle's Toolbox-Loader (%0)
+
 echo ========================
 echo.
-echo  Bolle's MS_Toolbox.cmd
-echo   to open Script from
-echo     Chris Titus Tech
+echo  Bolle's Toolbox-Loader
 echo.
 echo ========================
 echo.
+echo.
+echo  [1] WinUtil (Chris Titus Tech)
+echo  [2] Winhance (Mems Tech Tips)
+echo  [0] Beenden
+echo.
 
-goto checkPrivileges
-:gotPrivileges
+choice /C 120 /N /T 10 /D 0 /M "Auswahl: "
 
-powershell.exe -ExecutionPolicy Bypass -Command "iwr -useb https://christitus.com/win | iex"
-exit /b 0
+if errorlevel 3 goto :ende
 
-:checkPrivileges
-net session >nul 2>&1 && goto gotPrivileges
-net file    >nul 2>&1 && goto gotPrivileges
-set "SCRIPT=%~f0"
-set "SCRIPT=%SCRIPT:'=''%"
-powershell -NoProfile -WindowStyle Hidden -Command "Start-Process -FilePath '%SCRIPT%' -Verb RunAs" >nul 2>&1
-if errorlevel 1 (start "" cmd /c "color C & echo. & echo UAC-Abfrage wurde abgebrochen oder ist fehlgeschlagen. & echo. & pause" & exit /b 1)
-exit /b 0
+if errorlevel 2 (
+    set "ToolName=Winhance"
+    set "ToolUrl=https://get.winhance.net"
+    goto :laden
+)
+
+if errorlevel 1 (
+    set "ToolName=Chris Titus Tech WinUtil"
+    set "ToolUrl=https://christitus.com/win"
+    goto :laden
+)
+
+goto :ende
+
+:laden
+echo.
+echo %ToolName% wird geladen ...
+echo.
+
+rem powershell.exe -NoProfile -Command "Invoke-RestMethod -Uri '%ToolUrl%' -ErrorAction Stop | Invoke-Expression"
+powershell.exe -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; try { Invoke-RestMethod -Uri '%ToolUrl%' -ErrorAction Stop | Invoke-Expression } catch { Write-Error $_.Exception.Message; exit 1 }"
+
+if errorlevel 1 (
+    echo.
+    echo Fehler: %ToolName% konnte nicht gestartet werden.
+    echo.
+    pause
+	goto :ende
+)
+
+:ende
+endlocal
 ]]>
 </File>
 <!-- Adds Script to Disable USB Powermanagement -->
@@ -2120,6 +2104,69 @@ net file    >nul 2>&1 && goto gotPrivileges
 set "SCRIPT=%~f0"
 set "SCRIPT=%SCRIPT:'=''%"
 powershell -NoProfile -WindowStyle Hidden -Command "Start-Process -FilePath '%SCRIPT%' -Verb RunAs" >nul 2>&1
+if errorlevel 1 (start "" cmd /c "color C & echo. & echo UAC-Abfrage wurde abgebrochen oder ist fehlgeschlagen. & echo. & pause" & exit /b 1)
+exit /b 0
+]]>
+</File>
+<!-- Adds Script to reinstall MS WinGet (For LTSC IOT Installations) -->
+<File path="C:\Windows\Setup\Scripts\_MS_WinGet_Reinstall.cmd">
+<![CDATA[
+@echo off & color 2 & cls & title Bolle's WinGet Installer (%0)
+
+echo ==========================
+echo.
+echo  Bolle's WinGet Installer
+echo.
+echo ==========================
+echo.
+echo Adminrechte anfordern...
+goto checkPrivileges
+
+:gotPrivileges
+cls
+echo ==========================
+echo.
+echo  Bolle's WinGet Installer
+echo.
+echo ==========================
+echo.
+echo Dies kann ein paar Minuten dauern.
+echo.
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
+"$ProgressPreference='SilentlyContinue'; ^
+$ErrorActionPreference='Stop'; ^
+Write-Host 'Installing WinGet...'; ^
+Install-PackageProvider -Name NuGet -Force -Confirm:$false ^| Out-Null; ^
+Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery -Confirm:$false ^| Out-Null; ^
+Write-Host 'Initialising WinGet...'; ^
+Repair-WinGetPackageManager -AllUsers; ^
+Write-Host 'Updating Microsoft Store source...'; ^
+winget source update --name msstore --disable-interactivity; ^
+if ($LASTEXITCODE -ne 0) { throw 'Die WinGet-Quelle konnte nicht aktualisiert werden.' }; ^
+winget search Bolle --source msstore --accept-source-agreements --disable-interactivity; ^
+winget --info"
+
+set "RESULT=%ERRORLEVEL%"
+
+echo.
+if not "%RESULT%"=="0" (
+    color C
+    echo Installation fehlgeschlagen. Fehlercode: %RESULT%
+) else (
+    echo Fertig!
+)
+
+echo.
+pause
+exit /b %RESULT%
+
+:checkPrivileges
+net session >nul 2>&1 && goto gotPrivileges
+net file    >nul 2>&1 && goto gotPrivileges
+set "SCRIPT=%~f0"
+set "SCRIPT=%SCRIPT:'=''%"
+powershell -NoProfile -WindowStyle Hidden -Command "Start-Process -FilePath '%SCRIPT%' -Verb RunAs -ArgumentList '1'" >nul 2>&1
 if errorlevel 1 (start "" cmd /c "color C & echo. & echo UAC-Abfrage wurde abgebrochen oder ist fehlgeschlagen. & echo. & pause" & exit /b 1)
 exit /b 0
 ]]>
@@ -2271,7 +2318,6 @@ exit
 │  SPECIALIZE.PS1  [SYSTEM · vor erstem Login]                │
 ├─────────────────────────────────────────────────────────────┤
 │  SystemRemoval.ps1  (Packages · Capabilities · Features)    │
-│  SystemStartmenu.ps1  (Startmenü leeren)                    │
 │  System.reg  (Take Ownership Kontextmenü)                   │
 │  System.cmd  (Local Machine Konfig · UAC deaktivieren)      │
 │  System.ps1  (Local Machine Konfig)                         │
